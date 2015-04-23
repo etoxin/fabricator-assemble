@@ -65,6 +65,13 @@ var defaults = {
 	 * @type {String}
 	 */
 	dest: 'dist',
+
+	/**
+	 * Preserve the character casing of file names
+	 * @type {Bool}
+	 */
+	preserveCase: false,
+
 	/**
 	 * beautifier options
 	 * @type {Object}
@@ -138,6 +145,19 @@ var getFileName = function (filePath) {
 
 
 /**
+ * Return the title of a file with or without title case based on options.titleCase
+ * @param  {String} name
+ * @return {String}
+ */
+var getTitle = function (title) {
+	return (options.preserveCase)
+		? title.replace(/-/ig, ' ')
+		: changeCase.titleCase(title)
+		;
+};
+
+
+/**
  * Build the template context by merging context-specific data with assembly data
  * @param  {Object} data
  * @return {Object}
@@ -184,12 +204,12 @@ var parseMaterials = function () {
 
 		if (!isSubCollection) {
 			assembly.materials[collection] = assembly.materials[collection] || {
-				name: changeCase.titleCase(collection),
+				name: getTitle(collection),
 				items: {}
 			};
 		} else {
 			assembly.materials[parent].items[collection] = assembly.materials[parent].items[collection] || {
-				name: changeCase.titleCase(collection),
+				name: getTitle(collection),
 				items: {}
 			};
 		}
@@ -217,12 +237,12 @@ var parseMaterials = function () {
 		// capture meta data for the material
 		if (!isSubCollection) {
 			assembly.materials[collection].items[id] = {
-				name: changeCase.titleCase(id),
+				name: getTitle(id),
 				notes: (fileMatter.data.notes) ? md.render(fileMatter.data.notes) : ''
 			};
 		} else {
 			assembly.materials[parent].items[collection].items[id] = {
-				name: changeCase.titleCase(id.split('.')[1]),
+				name: getTitle(id.split('.')[1]),
 				notes: (fileMatter.data.notes) ? md.render(fileMatter.data.notes) : ''
 			};
 		}
@@ -280,7 +300,7 @@ var parseDocs = function () {
 
 		// save each as unique prop
 		assembly.docs[id] = {
-			name: changeCase.titleCase(id),
+			name: getTitle(id),
 			content: md.render(fs.readFileSync(file, 'utf-8'))
 		};
 
