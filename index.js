@@ -49,6 +49,12 @@ var defaults = {
 	materials: 'src/materials/**/*',
 
 	/**
+	 * Provides an option to parse file names for an ID delimited by [...]
+	 * @type {Bool}
+	 */
+	materialsUseId: false,
+
+	/**
 	 * JSON or YAML data models that are piped into views
 	 * @type {(String|Array)}
 	 */
@@ -65,6 +71,7 @@ var defaults = {
 	 * @type {String}
 	 */
 	dest: 'dist',
+
 	/**
 	 * beautifier options
 	 * @type {Object}
@@ -138,6 +145,29 @@ var getFileName = function (filePath) {
 
 
 /**
+ * Return the id of a material file delimited by [...]
+ * @param  {String} fileName
+ * @return {String}
+ */
+var getId = function (fileName) {
+	var fragment = fileName.match(/\[(.*?)\]/g)[0],
+		id = fragment.substr(1, fragment.length - 2);
+	return id;
+};
+
+
+/**
+ * Return the title of a material file without the id
+ * @param  {String} fileName
+ * @return {String}
+ */
+var getTitle = function (fileName) {
+	var title = fileName.replace(/\[(.*?)\]/g, '');
+	return title;
+};
+
+
+/**
  * Build the template context by merging context-specific data with assembly data
  * @param  {Object} data
  * @return {Object}
@@ -205,7 +235,8 @@ var parseMaterials = function () {
 		var collection = path.normalize(path.dirname(file)).split(path.sep).pop();
 		var parent = path.normalize(path.dirname(file)).split(path.sep).slice(-2, -1)[0];
 		var isSubCollection = (dirs.indexOf(parent) > -1);
-		var id = (isSubCollection) ? collection + '.' + getFileName(file) : getFileName(file);
+		var materialName = (isSubCollection) ? collection + '.' + getFileName(file) : getFileName(file);
+		var id = materialName;
 
 		// get material front-matter, omit `notes`
 		var localData = _.omit(fileMatter.data, 'notes');
@@ -213,16 +244,20 @@ var parseMaterials = function () {
 		// trim whitespace from material content
 		var content = fileMatter.content.replace(/^(\s*(\r?\n|\r))+|(\s*(\r?\n|\r))+$/g, '');
 
+		if (options.materialsUseId) {
+			id = getId(file);
+			materialName = getTitle(materialName)
+		}
 
 		// capture meta data for the material
 		if (!isSubCollection) {
 			assembly.materials[collection].items[id] = {
-				name: changeCase.titleCase(id),
+				name: (options.materialsUseId ? id + ' - ' : '') + changeCase.titleCase(materialName),
 				notes: (fileMatter.data.notes) ? md.render(fileMatter.data.notes) : ''
 			};
 		} else {
 			assembly.materials[parent].items[collection].items[id] = {
-				name: changeCase.titleCase(id.split('.')[1]),
+				name: (options.materialsUseId ? id + ' - ' : '') + changeCase.titleCase(materialName.split('.')[1]),
 				notes: (fileMatter.data.notes) ? md.render(fileMatter.data.notes) : ''
 			};
 		}
