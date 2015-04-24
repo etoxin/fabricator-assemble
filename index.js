@@ -152,7 +152,6 @@ var getFileName = function (filePath) {
 var getId = function (fileName) {
 	var fragment = fileName.match(/\[(.*?)\]/g)[0],
 		id = fragment.substr(1, fragment.length - 2);
-	console.log(fragment, '-->', id);
 	return id;
 };
 
