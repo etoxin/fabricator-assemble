@@ -460,6 +460,7 @@ var setup = function (userOptions) {
 	parseLayoutIncludes();
 	parseData();
 	parseMaterials();
+	parseMaterials();
 	parseViews();
 	parseDocs();
 
